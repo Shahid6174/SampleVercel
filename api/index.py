@@ -6,55 +6,42 @@ import os
 
 app = FastAPI()
 
-# CORS configuration
+# CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_credentials=True,
-    allow_methods=["GET"],
+    allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load student data from local JSON
+# Load JSON data
 def load_student_data():
     try:
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        json_path = os.path.join(current_dir, 'q-vercel-python.json')  # No ".."
-        
-        with open(json_path, 'r') as file:
-            return json.load(file)
-    except FileNotFoundError:
-        print("q-vercel-python.json file not found")
-        return {}
-    except json.JSONDecodeError:
-        print("Error parsing JSON file")
+        json_path = os.path.join(current_dir, 'q-vercel-python.json')
+
+        with open(json_path, 'r') as f:
+            return json.load(f)
+    except Exception as e:
+        print(f"[ERROR] Failed to load JSON: {e}")
         return {}
 
-# Load once
 student_data = load_student_data()
 
 @app.get("/api")
-async def get_marks(name: List[str] = Query(..., description="Student names to get marks for")):
-    try:
-        if not name:
-            raise HTTPException(status_code=400, detail="No names provided. Use ?name=X&name=Y format")
-        
-        marks = []
-        for student_name in name:
-            marks.append(student_data.get(student_name))  # Returns None if not found
-        
-        return {"marks": marks}
+async def get_marks(name: List[str] = Query(...)):
+    if not name:
+        raise HTTPException(status_code=400, detail="No names provided")
     
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    marks = [student_data.get(n) for n in name]
+    return {"marks": marks}
 
 @app.get("/")
 async def root():
     return {
-        "message": "Student Marks API",
-        "usage": "/api?name=StudentName1&name=StudentName2",
-        "total_students": len(student_data)
+        "message": "Student Marks API running on Vercel",
+        "usage": "/api?name=Alice&name=Bob"
     }
 
-# Required by Vercel to expose the FastAPI app
-handler = app
+handler = app  # Required for Vercel
