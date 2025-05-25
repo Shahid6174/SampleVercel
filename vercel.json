@@ -3,9 +3,7 @@
   "functions": {
     "api/index.py": {
       "runtime": "python3.9",
-      "includeFiles": [
-        "api/q-vercel-python.json"
-      ]
+      "includeFiles": "api/q-vercel-python.json"
     }
   },
   "routes": [
